@@ -2,16 +2,6 @@
 
 A professional-grade security camera application POC (Proof of Concept) designed to demonstrate a high-fidelity mobile experience on the web. This application simulates a full-featured smart home security interface with dual-platform aesthetics (iOS & Android), real-time monitoring features, and AI-powered analysis.
 
-## 📸 App Gallery
-
-| **Dashboard** | **Live Monitoring** | **Smart Playback** |
-|:---:|:---:|:---:|
-| <img src="https://placehold.co/375x812/111111/3DDC84?text=Dashboard%0AHome+Screen&font=roboto" alt="Dashboard" width="200"/> | <img src="https://placehold.co/375x812/111111/007AFF?text=Live+View%0AAI+Analysis&font=roboto" alt="Live View" width="200"/> | <img src="https://placehold.co/375x812/111111/FFA500?text=History%0ATimeline&font=roboto" alt="Playback" width="200"/> |
-
-| **Events Feed** | **Setup Wizard** | **Settings** |
-|:---:|:---:|:---:|
-| <img src="https://placehold.co/375x812/111111/FFFFFF?text=Activity+Log%0AAlerts&font=roboto" alt="Events" width="200"/> | <img src="https://placehold.co/375x812/111111/3DDC84?text=Pairing%0AQR+Code&font=roboto" alt="Setup" width="200"/> | <img src="https://placehold.co/375x812/111111/808080?text=Settings%0APlatform+Toggle&font=roboto" alt="Settings" width="200"/> |
-
 ## ✨ Key Features
 
 ### 📱 Dual-Platform UX Engine
