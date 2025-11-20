@@ -11,10 +11,17 @@ A professional-grade security camera application POC (Proof of Concept) designed
 
 ### 🎥 Live Monitoring Center
 - **Real-time Stream Simulation**: High-quality video loop simulating a live feed.
+- **Interactive Tools**: Snapshot capture with flash effect, manual recording with timer, and emergency siren alarm activation.
+- **Digital Zoom**: Smooth 4-step digital zoom (up to 4x) with visual scaling.
+- **Camera Settings Overlay**: Instant access to hardware controls like Night Vision, WDR (Wide Dynamic Range), and Status LEDs via a modal sheet.
 - **Heads-Up Display (HUD)**: Live bitrate monitoring (KB/s), date/time overlays, and connection status.
-- **PTZ Controls**: Visual overlay for Pan-Tilt-Zoom camera manipulation.
 - **2-Way Audio**: "Hold to Talk" interface with real-time audio visualization effects and ripple animations.
-- **Quality Controls**: Toggle between SD and HD stream quality.
+
+### 🔔 Event Activity Hub
+- **Centralized Feed**: Dedicated tab for all security events (Motion, Person, Sound, Pet).
+- **Smart Filtering**: Filter events by category to quickly find specific incidents.
+- **Visual Logs**: Rich event cards with thumbnails, timestamps, and device attribution.
+- **One-Tap Replay**: Jump directly from an event log to the specific timestamp in playback history.
 
 ### 🧠 AI Smart Vision (Powered by Gemini)
 - **Instant Scene Analysis**: Integrated with Google Gemini API to analyze the current video frame.
@@ -24,7 +31,6 @@ A professional-grade security camera application POC (Proof of Concept) designed
 ### ⏪ Intelligent Playback & History
 - **Timeline Interface**: Drag-able timeline ruler for precise video seeking.
 - **Calendar Navigation**: Quick-access date strip to jump between recording days.
-- **Event Log**: List of detected events (Motion, Person, Pet, Sound) with thumbnails.
 - **Smart Seeking**: Clicking an event automatically aligns the timeline.
 
 ### 🔌 Device Pairing Wizard
@@ -45,5 +51,7 @@ A professional-grade security camera application POC (Proof of Concept) designed
 
 1. **Switching Platforms**: Go to Settings (Gear icon) -> Platform Style -> Toggle between iOS and Android.
 2. **Adding a Device**: Click the "+" icon on the Dashboard to start the QR pairing wizard.
-3. **Viewing History**: Inside Live View, click the "History" icon to access the timeline and event logs.
-4. **Using AI**: In Live View, tap the "AI Detect" (Lightning bolt) icon to analyze the scene.
+3. **Live Controls**: In Live View, try the "Snap" button for a screenshot, "Record" to capture a clip, or "Alarm" to trigger the siren demo. Use the Zoom button on the video feed to magnify details.
+4. **Camera Settings**: Tap the Gear icon in Live View to toggle Night Vision or Status Lights.
+5. **Viewing History**: Click the "Events" tab in the bottom bar to see a filtered list of activities, or access the full timeline via the "History" button in Live View.
+6. **Using AI**: In Live View, tap the "AI Detect" (Lightning bolt) icon to analyze the scene.

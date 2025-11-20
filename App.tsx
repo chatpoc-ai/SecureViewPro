@@ -29,7 +29,12 @@ import {
   Share2,
   Move,
   Filter,
-  Search
+  Search,
+  ZoomIn,
+  Moon,
+  Sun,
+  EyeOff,
+  Type
 } from 'lucide-react';
 import { Platform, CameraDevice, ViewState, RecordingEvent } from './types';
 import { analyzeCameraFrame } from './services/geminiService';
@@ -272,6 +277,17 @@ const LiveView: React.FC<{
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [bitrate, setBitrate] = useState(120);
   
+  // New States for Demo
+  const [showFlash, setShowFlash] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [isAlarmActive, setIsAlarmActive] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  
+  // Zoom & Settings Demo State
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [showCameraSettings, setShowCameraSettings] = useState(false);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   
   // Simulate bitrate fluctuation
@@ -281,6 +297,60 @@ const LiveView: React.FC<{
     }, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  // Recording Timer
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+    } else {
+      setRecordingDuration(0);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording]);
+
+  // Toast Helper
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleSnapshot = () => {
+    setShowFlash(true);
+    setTimeout(() => setShowFlash(false), 150);
+    showToast("Snapshot saved to Photos");
+  };
+
+  const handleRecord = () => {
+    if (isRecording) {
+      setIsRecording(false);
+      showToast("Video saved to Library");
+    } else {
+      setIsRecording(true);
+    }
+  };
+
+  const handleAlarm = () => {
+    const newState = !isAlarmActive;
+    setIsAlarmActive(newState);
+    showToast(newState ? "Siren Activated - Authorities Notified" : "Siren Deactivated");
+  };
+
+  const handleZoom = () => {
+    const levels = [1, 1.5, 2, 4];
+    const currentIndex = levels.indexOf(zoomLevel);
+    const nextLevel = levels[(currentIndex + 1) % levels.length];
+    setZoomLevel(nextLevel);
+    showToast(nextLevel === 1 ? "Zoom Reset" : `Digital Zoom ${nextLevel}x`);
+  };
+
+  const formatDuration = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   const handleAiAnalyze = async () => {
     if (!videoRef.current) return;
@@ -299,7 +369,74 @@ const LiveView: React.FC<{
   };
 
   return (
-    <div className="flex flex-col h-full bg-black">
+    <div className="flex flex-col h-full bg-black relative">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[100] bg-gray-800/90 text-white px-4 py-2 rounded-full text-sm font-medium backdrop-blur-md shadow-lg animate-slide-up border border-gray-700 flex items-center gap-2 whitespace-nowrap">
+          <CheckCircle2 size={14} className="text-green-500" />
+          {toastMessage}
+        </div>
+      )}
+
+      {/* Camera Settings Modal Overlay */}
+      {showCameraSettings && (
+         <div className="absolute inset-0 z-[100] bg-black/60 backdrop-blur-sm flex flex-col justify-end animate-in fade-in duration-200">
+            <div onClick={() => setShowCameraSettings(false)} className="flex-1 w-full" />
+            <div className="bg-gray-900 rounded-t-3xl p-6 pb-8 space-y-6 animate-in slide-in-from-bottom duration-300 border-t border-gray-800 shadow-2xl">
+               <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-bold text-white">Camera Settings</h3>
+                  <button onClick={() => setShowCameraSettings(false)} className="p-2 bg-gray-800 rounded-full text-gray-400 hover:text-white"><X size={20} /></button>
+               </div>
+               
+               <div className="space-y-4">
+                   <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-xl border border-gray-700/50">
+                       <div className="flex items-center gap-3">
+                           <Moon size={20} className="text-indigo-400" />
+                           <div className="flex flex-col">
+                              <span className="text-sm font-medium text-white">Night Vision</span>
+                              <span className="text-[10px] text-gray-400">Auto-switch in low light</span>
+                           </div>
+                       </div>
+                       <span className="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded">AUTO</span>
+                   </div>
+                   
+                   <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-xl border border-gray-700/50">
+                       <div className="flex items-center gap-3">
+                           <Sun size={20} className="text-orange-400" />
+                           <div className="flex flex-col">
+                              <span className="text-sm font-medium text-white">WDR Mode</span>
+                              <span className="text-[10px] text-gray-400">Wide Dynamic Range</span>
+                           </div>
+                       </div>
+                       <ToggleSwitch checked={true} onChange={() => {}} platform={platform} />
+                   </div>
+
+                   <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-xl border border-gray-700/50">
+                       <div className="flex items-center gap-3">
+                           <EyeOff size={20} className="text-gray-400" />
+                           <div className="flex flex-col">
+                              <span className="text-sm font-medium text-white">Status Light</span>
+                              <span className="text-[10px] text-gray-400">LED on device</span>
+                           </div>
+                       </div>
+                       <ToggleSwitch checked={false} onChange={() => {}} platform={platform} />
+                   </div>
+
+                   <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-xl border border-gray-700/50">
+                       <div className="flex items-center gap-3">
+                           <Type size={20} className="text-gray-400" />
+                           <div className="flex flex-col">
+                              <span className="text-sm font-medium text-white">Timestamp</span>
+                              <span className="text-[10px] text-gray-400">Overlay on video</span>
+                           </div>
+                       </div>
+                       <ToggleSwitch checked={true} onChange={() => {}} platform={platform} />
+                   </div>
+               </div>
+            </div>
+         </div>
+      )}
+
       {/* Floating Header */}
       <div className="absolute top-10 left-0 right-0 z-20 px-4 flex items-center justify-between pointer-events-none">
         <button onClick={onBack} className="pointer-events-auto p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60 transition-colors">
@@ -309,7 +446,7 @@ const LiveView: React.FC<{
            <button onClick={() => setQuality(q => q === 'HD' ? 'SD' : 'HD')} className="px-3 py-1 bg-black/40 backdrop-blur-md rounded-lg text-xs font-bold border border-white/10">
              {quality}
            </button>
-           <button className="p-2 bg-black/40 backdrop-blur-md rounded-full hover:bg-black/60">
+           <button onClick={() => setShowCameraSettings(true)} className="p-2 bg-black/40 backdrop-blur-md rounded-full hover:bg-black/60 transition-colors active:scale-90">
              <Settings size={20} />
            </button>
         </div>
@@ -320,6 +457,10 @@ const LiveView: React.FC<{
          <video 
             ref={videoRef}
             className="w-full h-full object-cover"
+            style={{ 
+              transform: `scale(${zoomLevel})`,
+              transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+            }}
             autoPlay 
             muted={isMuted} 
             loop 
@@ -327,6 +468,22 @@ const LiveView: React.FC<{
             src="https://assets.mixkit.co/videos/preview/mixkit-living-room-with-a-fireplace-and-a-christmas-tree-41675-large.mp4"
           />
          
+         {/* Flash Effect Overlay */}
+         <div className={`absolute inset-0 bg-white transition-opacity duration-150 pointer-events-none z-50 ${showFlash ? 'opacity-100' : 'opacity-0'}`} />
+         
+         {/* Alarm Overlay */}
+         {isAlarmActive && (
+            <div className="absolute inset-0 z-40 pointer-events-none animate-pulse bg-red-500/20 border-[4px] border-red-500" />
+         )}
+
+         {/* Recording Indicator */}
+         {isRecording && (
+            <div className="absolute top-20 left-4 z-30 bg-red-600/90 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-2 animate-pulse">
+               <div className="w-2 h-2 bg-white rounded-full" />
+               REC {formatDuration(recordingDuration)}
+            </div>
+         )}
+
          {/* OSD Overlays */}
          <div className="absolute top-4 right-4 flex flex-col items-end gap-1 opacity-70 text-[10px] font-mono shadow-sm">
             <span>{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
@@ -346,13 +503,20 @@ const LiveView: React.FC<{
             </div>
          </div>
 
-         {/* Volume / Fullscreen Controls */}
-         <div className="absolute bottom-4 right-4 flex gap-2">
-            <button onClick={() => setIsMuted(!isMuted)} className="p-2 bg-black/50 rounded-full">
+         {/* Volume / Zoom Controls */}
+         <div className="absolute bottom-4 right-4 flex gap-2 z-30">
+            <button onClick={() => setIsMuted(!isMuted)} className="p-2 bg-black/50 backdrop-blur-md rounded-full border border-white/10 hover:bg-black/70">
                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>
-            <button className="p-2 bg-black/50 rounded-full">
-               <Maximize2 size={16} />
+            <button 
+               onClick={handleZoom} 
+               className="p-2 w-8 h-8 flex items-center justify-center bg-black/50 backdrop-blur-md rounded-full border border-white/10 hover:bg-black/70 transition-all"
+            >
+               {zoomLevel > 1 ? (
+                 <span className="text-[10px] font-bold text-blue-400">{zoomLevel}x</span>
+               ) : (
+                 <ZoomIn size={16} />
+               )}
             </button>
          </div>
 
@@ -391,17 +555,20 @@ const LiveView: React.FC<{
                <History size={20} className="text-white" />
                <span className="text-[10px] text-gray-400">History</span>
             </button>
-            <button className="flex flex-col items-center gap-1 py-2 rounded-lg active:bg-gray-800">
+            <button onClick={handleSnapshot} className="flex flex-col items-center gap-1 py-2 rounded-lg active:bg-gray-800 active:scale-95 transition-transform">
                <Camera size={20} className="text-white" />
                <span className="text-[10px] text-gray-400">Snap</span>
             </button>
-            <button className="flex flex-col items-center gap-1 py-2 rounded-lg active:bg-gray-800">
-               <Video size={20} className="text-white" />
-               <span className="text-[10px] text-gray-400">Record</span>
+            <button onClick={handleRecord} className={`flex flex-col items-center gap-1 py-2 rounded-lg active:bg-gray-800 transition-colors ${isRecording ? 'bg-red-900/30' : ''}`}>
+               <div className={`relative ${isRecording ? 'animate-pulse' : ''}`}>
+                 <Video size={20} className={isRecording ? "text-red-500" : "text-white"} />
+                 {isRecording && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
+               </div>
+               <span className={`text-[10px] ${isRecording ? 'text-red-400 font-bold' : 'text-gray-400'}`}>{isRecording ? 'REC' : 'Record'}</span>
             </button>
-            <button className="flex flex-col items-center gap-1 py-2 rounded-lg active:bg-gray-800">
-               <Bell size={20} className="text-white" />
-               <span className="text-[10px] text-gray-400">Alarm</span>
+            <button onClick={handleAlarm} className={`flex flex-col items-center gap-1 py-2 rounded-lg active:bg-gray-800 transition-colors ${isAlarmActive ? 'bg-red-900/30' : ''}`}>
+               <Bell size={20} className={isAlarmActive ? "text-red-500 animate-bounce" : "text-white"} fill={isAlarmActive ? "currentColor" : "none"} />
+               <span className={`text-[10px] ${isAlarmActive ? 'text-red-400 font-bold' : 'text-gray-400'}`}>{isAlarmActive ? 'Active' : 'Alarm'}</span>
             </button>
          </div>
 
