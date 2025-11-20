@@ -1,0 +1,8 @@
+{
+  "name": "SecureView Pro",
+  "description": "A professional-grade security camera application interface featuring dual-platform aesthetics (iOS/Android), real-time monitoring simulation, device pairing wizard, and AI-powered smart detection.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
