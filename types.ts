@@ -17,9 +17,11 @@ export interface RecordingEvent {
   duration: string;
   type: 'motion' | 'sound' | 'person' | 'pet';
   thumbnailUrl: string;
+  deviceId?: string;   // ID of the camera that recorded this
+  cameraName?: string; // Name of the camera for display
 }
 
-export type ViewState = 'dashboard' | 'live' | 'playback' | 'setup' | 'settings';
+export type ViewState = 'dashboard' | 'live' | 'playback' | 'setup' | 'settings' | 'events';
 
 export interface AppState {
   platform: Platform;

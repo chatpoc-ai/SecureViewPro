@@ -27,7 +27,9 @@ import {
   Pause,
   Download,
   Share2,
-  Move
+  Move,
+  Filter,
+  Search
 } from 'lucide-react';
 import { Platform, CameraDevice, ViewState, RecordingEvent } from './types';
 import { analyzeCameraFrame } from './services/geminiService';
@@ -67,11 +69,13 @@ const MOCK_DEVICES: CameraDevice[] = [
 ];
 
 const MOCK_EVENTS: RecordingEvent[] = [
-  { id: 'evt-1', timestamp: '14:42', duration: '0:45', type: 'person', thumbnailUrl: 'https://picsum.photos/200/150?random=201' },
-  { id: 'evt-2', timestamp: '12:15', duration: '1:20', type: 'motion', thumbnailUrl: 'https://picsum.photos/200/150?random=202' },
-  { id: 'evt-3', timestamp: '09:30', duration: '0:30', type: 'pet', thumbnailUrl: 'https://picsum.photos/200/150?random=203' },
-  { id: 'evt-4', timestamp: '08:10', duration: '2:10', type: 'sound', thumbnailUrl: 'https://picsum.photos/200/150?random=204' },
-  { id: 'evt-5', timestamp: '03:45', duration: '0:15', type: 'motion', thumbnailUrl: 'https://picsum.photos/200/150?random=205' },
+  { id: 'evt-1', timestamp: '14:42', duration: '0:45', type: 'person', thumbnailUrl: 'https://picsum.photos/200/150?random=201', deviceId: 'cam-01', cameraName: 'Front Door' },
+  { id: 'evt-2', timestamp: '12:15', duration: '1:20', type: 'motion', thumbnailUrl: 'https://picsum.photos/200/150?random=202', deviceId: 'cam-03', cameraName: 'Garage' },
+  { id: 'evt-3', timestamp: '09:30', duration: '0:30', type: 'pet', thumbnailUrl: 'https://picsum.photos/200/150?random=203', deviceId: 'cam-02', cameraName: 'Baby Room' },
+  { id: 'evt-4', timestamp: '08:10', duration: '2:10', type: 'sound', thumbnailUrl: 'https://picsum.photos/200/150?random=204', deviceId: 'cam-02', cameraName: 'Baby Room' },
+  { id: 'evt-5', timestamp: '03:45', duration: '0:15', type: 'motion', thumbnailUrl: 'https://picsum.photos/200/150?random=205', deviceId: 'cam-01', cameraName: 'Front Door' },
+  { id: 'evt-6', timestamp: 'Yesterday', duration: '0:22', type: 'person', thumbnailUrl: 'https://picsum.photos/200/150?random=206', deviceId: 'cam-01', cameraName: 'Front Door' },
+  { id: 'evt-7', timestamp: 'Yesterday', duration: '1:05', type: 'motion', thumbnailUrl: 'https://picsum.photos/200/150?random=207', deviceId: 'cam-03', cameraName: 'Garage' },
 ];
 
 // --- Components ---
@@ -170,6 +174,86 @@ const Dashboard: React.FC<{
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+};
+
+const EventsView: React.FC<{
+  platform: Platform;
+  onSelectEvent: (event: RecordingEvent) => void;
+}> = ({ platform, onSelectEvent }) => {
+  const [filter, setFilter] = useState<'all' | 'person' | 'motion'>('all');
+  
+  const filteredEvents = MOCK_EVENTS.filter(e => filter === 'all' || e.type === filter);
+
+  return (
+    <div className="h-full bg-black flex flex-col pb-24">
+      {/* Header */}
+      <div className={`px-5 py-4 border-b border-gray-800 flex justify-between items-end ${platform === 'android' ? 'mt-4' : ''}`}>
+        <div>
+           <h1 className="text-2xl font-bold">Activity</h1>
+           <p className="text-xs text-gray-400 mt-1">Recent alerts from your system</p>
+        </div>
+        <button className="p-2 bg-gray-900 rounded-full text-gray-400">
+           <Search size={20} />
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-3 px-5 py-4 overflow-x-auto no-scrollbar">
+         {['all', 'person', 'motion', 'sound', 'pet'].map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f as any)}
+              className={`
+                px-4 py-2 rounded-full text-xs font-medium capitalize transition-colors
+                ${filter === f 
+                  ? (platform === 'ios' ? 'bg-white text-black' : 'bg-android-green text-black') 
+                  : 'bg-gray-900 text-gray-400 border border-gray-800'}
+              `}
+            >
+               {f}
+            </button>
+         ))}
+      </div>
+
+      {/* List */}
+      <div className="flex-1 overflow-y-auto px-4 space-y-4">
+         {filteredEvents.map((evt) => (
+            <div 
+               key={evt.id}
+               onClick={() => onSelectEvent(evt)}
+               className="flex gap-4 p-3 bg-gray-900/50 rounded-xl border border-gray-800 cursor-pointer hover:bg-gray-800 transition-colors active:scale-[0.98]"
+            >
+               {/* Thumbnail */}
+               <div className="relative w-24 h-16 bg-gray-800 rounded-lg overflow-hidden shrink-0">
+                  <img src={evt.thumbnailUrl} className="w-full h-full object-cover" alt="event" />
+                  <div className="absolute bottom-1 right-1 bg-black/60 px-1 rounded text-[10px] font-mono">
+                     {evt.timestamp}
+                  </div>
+               </div>
+
+               {/* Info */}
+               <div className="flex-1 flex flex-col justify-center">
+                  <div className="flex justify-between items-start">
+                     <h3 className="font-semibold text-sm capitalize text-white flex items-center gap-2">
+                        {evt.type === 'person' && <span className="text-blue-400">Person Detected</span>}
+                        {evt.type === 'motion' && <span className="text-orange-400">Motion Detected</span>}
+                        {evt.type === 'pet' && <span className="text-yellow-400">Pet Detected</span>}
+                        {evt.type === 'sound' && <span className="text-purple-400">Sound Detected</span>}
+                     </h3>
+                     <ChevronRight size={16} className="text-gray-600" />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">{evt.cameraName || 'Unknown Camera'}</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">{evt.duration} recorded</p>
+               </div>
+            </div>
+         ))}
+         
+         <div className="py-8 text-center text-gray-600 text-xs">
+            End of recent history
+         </div>
       </div>
     </div>
   );
@@ -376,10 +460,73 @@ const LiveView: React.FC<{
   );
 };
 
-const PlaybackView: React.FC<{ platform: Platform; onBack: () => void }> = ({ platform, onBack }) => {
+const PlaybackView: React.FC<{ 
+  platform: Platform; 
+  onBack: () => void;
+  initialTime?: string;
+}> = ({ platform, onBack, initialTime }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isPlaying, setIsPlaying] = useState(true);
-  const [scrubberPos, setScrubberPos] = useState(50); // Percentage
+  
+  // Timeline Logic
+  const [timeOffset, setTimeOffset] = useState(0); // Pixels
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const currentOffset = useRef(0);
+
+  // Generate current displayed time based on offset
+  // Assumption: 100 pixels = 1 hour
+  const baseTime = 14 * 60 + 42; // 14:42 in minutes
+
+  // Helper to calculate offset from time string "HH:MM"
+  const calculateOffsetFromTime = (timeStr: string) => {
+    const [h, m] = timeStr.split(':').map(Number);
+    const targetMinutes = h * 60 + m;
+    // Reverse the formula: displayedMinutes = baseTime - (offset / 100) * 60
+    // offset = (baseTime - targetMinutes) / 0.6
+    return (baseTime - targetMinutes) / 0.6;
+  };
+
+  useEffect(() => {
+    if (initialTime) {
+      setTimeOffset(calculateOffsetFromTime(initialTime));
+    }
+  }, [initialTime]);
+
+  const getDisplayTime = (offset: number) => {
+    const displayedMinutes = baseTime - (offset / 100) * 60;
+    const displayDate = new Date();
+    displayDate.setHours(Math.floor(displayedMinutes / 60));
+    displayDate.setMinutes(Math.floor(displayedMinutes % 60));
+    displayDate.setSeconds(0);
+    return displayDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  };
+
+  const timeString = getDisplayTime(timeOffset);
+
+  // Function to jump to a specific timestamp from an event
+  const jumpToTime = (timeStr: string) => {
+    setTimeOffset(calculateOffsetFromTime(timeStr));
+  };
+
+
+  const handleDragStart = (clientX: number) => {
+    isDragging.current = true;
+    startX.current = clientX;
+    currentOffset.current = timeOffset;
+  };
+
+  const handleDragMove = (clientX: number) => {
+    if (!isDragging.current) return;
+    const delta = clientX - startX.current;
+    // Limit scrolling somewhat
+    const newOffset = currentOffset.current + delta;
+    setTimeOffset(newOffset);
+  };
+
+  const handleDragEnd = () => {
+    isDragging.current = false;
+  };
 
   const dates = Array.from({length: 7}, (_, i) => {
     const d = new Date();
@@ -387,8 +534,16 @@ const PlaybackView: React.FC<{ platform: Platform; onBack: () => void }> = ({ pl
     return d;
   }).reverse();
 
+  // Filter events for display in playback list (just random mock subset or all)
+  const playbackEvents = MOCK_EVENTS.slice(0, 5);
+
   return (
-    <div className="h-full bg-gray-900 flex flex-col">
+    <div 
+      className="h-full bg-gray-900 flex flex-col select-none"
+      onMouseUp={handleDragEnd}
+      onMouseLeave={handleDragEnd}
+      onTouchEnd={handleDragEnd}
+    >
       {/* Header */}
       <div className={`px-4 py-3 flex items-center gap-4 bg-gray-900 border-b border-gray-800 z-20`}>
         <button onClick={onBack} className="p-1"><ChevronLeft /></button>
@@ -416,7 +571,7 @@ const PlaybackView: React.FC<{ platform: Platform; onBack: () => void }> = ({ pl
         
         {/* Overlay Time */}
         <div className="absolute bottom-2 right-2 bg-black/60 px-2 py-1 rounded text-xs font-mono">
-           14:42:35
+           {timeString}
         </div>
       </div>
 
@@ -434,24 +589,44 @@ const PlaybackView: React.FC<{ platform: Platform; onBack: () => void }> = ({ pl
          <button className="text-gray-400 hover:text-white"><Maximize2 size={20} /></button>
       </div>
 
-      {/* Timeline UI */}
-      <div className="h-24 bg-gray-800 relative overflow-hidden cursor-ew-resize select-none border-b border-gray-700">
-         {/* Ruler Marks */}
-         <div className="absolute inset-0 flex items-end justify-between px-4 pb-2">
-            {[...Array(25)].map((_, i) => (
-               <div key={i} className="flex flex-col items-center gap-1 opacity-50">
-                  <div className={`w-0.5 bg-gray-400 ${i % 6 === 0 ? 'h-6' : 'h-3'}`} />
-                  {i % 6 === 0 && <span className="text-[10px]">{i}:00</span>}
-               </div>
-            ))}
+      {/* Draggable Timeline UI */}
+      <div 
+        className="h-24 bg-gray-800 relative overflow-hidden cursor-grab active:cursor-grabbing border-b border-gray-700 touch-none"
+        onMouseDown={(e) => handleDragStart(e.clientX)}
+        onMouseMove={(e) => handleDragMove(e.clientX)}
+        onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+        onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+      >
+         {/* Ruler Marks Container */}
+         <div 
+            className="absolute inset-y-0 flex items-end left-1/2"
+            style={{ transform: `translateX(${timeOffset}px)` }}
+         >
+            {/* Generate a wide range of ruler marks */}
+            {/* Shift left by half width to center 0 */}
+            <div className="flex -translate-x-1/2">
+              {[...Array(100)].map((_, i) => {
+                 const hour = Math.floor(i / 4); // Every 4th is an hour
+                 const isHour = i % 4 === 0;
+                 return (
+                   <div key={i} className="flex flex-col items-center justify-end w-[25px] gap-1 opacity-60 shrink-0">
+                      <div className={`w-0.5 bg-gray-400 ${isHour ? 'h-8' : 'h-4'}`} />
+                      {isHour && <span className="text-[10px] text-gray-300 select-none">{hour % 24}:00</span>}
+                   </div>
+                 );
+              })}
+            </div>
+            
+            {/* Blue Activity Blocks - Positioned relative to the ruler */}
+            <div className="absolute top-8 left-[0px] w-[100px] h-4 bg-blue-500/50 rounded-sm border border-blue-400 pointer-events-none" />
+            <div className="absolute top-8 left-[200px] w-[300px] h-4 bg-blue-500/50 rounded-sm border border-blue-400 pointer-events-none" />
          </div>
-         {/* Blue Activity Blocks */}
-         <div className="absolute top-8 left-10 w-16 h-4 bg-blue-500/50 rounded-sm border border-blue-400" />
-         <div className="absolute top-8 left-40 w-24 h-4 bg-blue-500/50 rounded-sm border border-blue-400" />
          
-         {/* Scrubber Line */}
-         <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-red-500 z-10 shadow-[0_0_8px_red]" />
-         <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-red-500 text-white text-[10px] px-1 rounded-b">14:42</div>
+         {/* Center Scrubber Line (Static) */}
+         <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-red-500 z-10 shadow-[0_0_8px_red] pointer-events-none" />
+         <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-red-500 text-white text-[10px] px-1 rounded-b pointer-events-none">
+            {timeString.slice(0, 5)}
+         </div>
       </div>
 
       {/* Calendar Strip */}
@@ -476,16 +651,20 @@ const PlaybackView: React.FC<{ platform: Platform; onBack: () => void }> = ({ pl
       {/* Event List */}
       <div className="flex-1 overflow-y-auto bg-gray-900">
          <div className="p-4 space-y-4">
-            {MOCK_EVENTS.map((evt) => (
-               <div key={evt.id} className="flex gap-4 group cursor-pointer active:opacity-70">
+            {playbackEvents.map((evt) => (
+               <div 
+                 key={evt.id} 
+                 onClick={() => jumpToTime(evt.timestamp)} 
+                 className="flex gap-4 group cursor-pointer active:opacity-70 transition-colors hover:bg-gray-800/50 p-2 -mx-2 rounded-lg"
+               >
                   <div className="w-12 text-right pt-1">
-                     <span className="text-sm font-mono text-gray-400">{evt.timestamp}</span>
+                     <span className="text-sm font-mono text-gray-400 group-hover:text-blue-400 transition-colors">{evt.timestamp}</span>
                   </div>
                   <div className="relative pt-2">
                      <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-gray-900 z-10 relative" />
                      <div className="absolute top-3 left-1.5 w-0.5 h-full bg-gray-800 -z-0" />
                   </div>
-                  <div className="flex-1 bg-gray-800 rounded-lg p-2 flex gap-3 border border-gray-700">
+                  <div className="flex-1 bg-gray-800 rounded-lg p-2 flex gap-3 border border-gray-700 group-hover:border-gray-600 transition-colors">
                      <img src={evt.thumbnailUrl} className="w-20 h-14 object-cover rounded bg-gray-900" alt="thumb" />
                      <div className="flex flex-col justify-center">
                         <span className="text-sm font-medium text-white capitalize">{evt.type} Detected</span>
@@ -518,6 +697,19 @@ const SetupWizard: React.FC<{ platform: Platform; onComplete: () => void; onCanc
   // Step 5: Connecting
 
   const next = () => setStep(s => s + 1);
+
+  // Auto-advance logic for Step 5
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (step === 5) {
+      timer = setTimeout(() => {
+        onComplete();
+      }, 4000);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [step, onComplete]);
 
   return (
     <div className="h-full bg-black flex flex-col relative">
@@ -639,9 +831,6 @@ const SetupWizard: React.FC<{ platform: Platform; onComplete: () => void; onCanc
                      <span>Initializing...</span>
                   </div>
                </div>
-
-               {/* Auto advance for demo */}
-               {setTimeout(() => onComplete(), 4000) && null}
              </div>
           )}
        </div>
@@ -657,12 +846,17 @@ export default function App() {
   const [selectedDevice, setSelectedDevice] = useState<CameraDevice | null>(null);
   const [devices, setDevices] = useState<CameraDevice[]>(MOCK_DEVICES);
   const [showTabbar, setShowTabbar] = useState(true);
+  const [playbackTime, setPlaybackTime] = useState<string | undefined>(undefined);
+  
+  // Track navigation history to return to the correct screen
+  const previousView = useRef<ViewState>('dashboard');
 
   // Navigation Handlers
   const handleDeviceSelect = (id: string) => {
     const dev = devices.find(d => d.id === id);
     if (dev) {
       setSelectedDevice(dev);
+      previousView.current = 'dashboard';
       setCurrentView('live');
       setShowTabbar(false);
     }
@@ -695,11 +889,38 @@ export default function App() {
             platform={platform} 
             device={selectedDevice} 
             onBack={handleBack}
-            onPlayback={() => setCurrentView('playback')}
+            onPlayback={() => {
+              previousView.current = 'live';
+              setPlaybackTime(undefined);
+              setCurrentView('playback');
+            }}
           />
         ) : null;
+      case 'events':
+        return (
+           <EventsView 
+             platform={platform}
+             onSelectEvent={(evt) => {
+               const dev = devices.find(d => d.id === evt.deviceId) || devices[0];
+               setSelectedDevice(dev);
+               setPlaybackTime(evt.timestamp);
+               previousView.current = 'events';
+               setCurrentView('playback');
+               setShowTabbar(false);
+             }}
+           />
+        );
       case 'playback':
-        return <PlaybackView platform={platform} onBack={() => setCurrentView('live')} />;
+        return <PlaybackView 
+          platform={platform} 
+          initialTime={playbackTime}
+          onBack={() => {
+             setCurrentView(previousView.current);
+             if (previousView.current === 'dashboard' || previousView.current === 'events') {
+                setShowTabbar(true);
+             }
+          }} 
+        />;
       case 'setup':
         return <SetupWizard platform={platform} onComplete={handleDeviceAdded} onCancel={handleBack} />;
       case 'settings':
@@ -780,7 +1001,14 @@ export default function App() {
                 <LayoutGrid size={24} />
                 <span className="text-[10px]">Home</span>
              </button>
-             <button className={`flex flex-col items-center gap-1 p-2 w-16 text-gray-500 hover:text-gray-300`}>
+             <button 
+               onClick={() => {
+                 previousView.current = 'dashboard';
+                 setCurrentView('events');
+                 setShowTabbar(true);
+               }}
+               className={`flex flex-col items-center gap-1 p-2 w-16 ${currentView === 'events' ? (platform === 'ios' ? 'text-ios-blue' : 'text-android-green') : 'text-gray-500'}`}
+             >
                 <History size={24} />
                 <span className="text-[10px]">Events</span>
              </button>
